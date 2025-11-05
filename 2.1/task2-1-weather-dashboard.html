@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Dashboard</title>
+  <style>
+    body {
+      font-family: "Courier New", monospace;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+    input {
+      padding: 10px;
+      width: 250px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      margin-right: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #5563de;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    hr {
+      border: 1px solid white;
+      margin: 20px 0;
+    }
+    .error {
+      background-color: red;
+      padding: 10px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+    .forecast-table {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Weather Dashboard</h1>
+  <hr>
+
+  <input type="text" id="city" placeholder="London">
+  <button onclick="searchWeather()">Search</button>
+
+  <p id="recent" style="margin-top:10px;"></p>
+
+  <hr>
+
+  <div id="weather"></div>
+  <div id="forecast"></div>
+
+  <script>
+    const API_KEY = "fe8b19ff2dd3ccf908b7a467067cb72a";
+
+    // 🌤️ Hàm chính tìm kiếm
+    async function searchWeather() {
+      const city = document.getElementById("city").value.trim();
+      if (!city) return;
+
+      document.getElementById("weather").innerHTML = "Loading...";
+      document.getElementById("forecast").innerHTML = "";
+
+      try {
+        const [weatherData, forecastData] = await Promise.all([
+          fetchWeather(city),
+          fetchForecast(city)
+        ]);
+
+        displayWeather(weatherData);
+        displayForecast(forecastData);
+        saveRecentCity(city);
+        renderRecentCities();
+      } catch (error) {
+        document.getElementById("weather").innerHTML = `<div class="error">${error.message}</div>`;
+      }
+    }
+
+    // 🧭 Lấy dữ liệu thời tiết hiện tại
+    async function fetchWeather(city) {
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
+      if (!res.ok) throw new Error("City not found");
+      return res.json();
+    }
+
+    // 📅 Lấy dữ liệu dự báo 5 ngày
+    async function fetchForecast(city) {
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
+      if (!res.ok) throw new Error("Forecast not available");
+      return res.json();
+    }
+
+    // 📄 Hiển thị thời tiết hiện tại
+    function displayWeather(data) {
+      const icon = getWeatherIcon(data.weather[0].main);
+      const desc = capitalizeFirst(data.weather[0].description);
+
+      document.getElementById("weather").innerHTML = `
+        <h2>${data.name}, ${data.sys.country}</h2>
+        <p>${desc} ${icon}</p>
+        <p>${data.main.temp.toFixed(1)}°C</p>
+        <br>
+        <p>Humidity: ${data.main.humidity}% &nbsp;&nbsp; Wind: ${(data.wind.speed * 3.6).toFixed(1)} km/h</p>
+      `;
+    }
+
+    // 📊 Hiển thị dự báo 5 ngày (dạng bảng)
+    function displayForecast(data) {
+      const list = data.list.filter(item => item.dt_txt.includes("12:00:00"));
+      let days = "";
+      let icons = "";
+      let temps = "";
+
+      list.slice(0, 5).forEach(item => {
+        const date = new Date(item.dt_txt);
+        const day = date.toLocaleDateString("en-US", { weekday: "short" });
+        const icon = getWeatherIcon(item.weather[0].main);
+        days += `<div>${day}</div>`;
+        icons += `<div>${icon}</div>`;
+        temps += `<div>${item.main.temp.toFixed(0)}°C</div>`;
+      });
+
+      document.getElementById("forecast").innerHTML = `
+        <h3>5-Day Forecast</h3>
+        <hr>
+        <div class="forecast-table">${days}</div>
+        <div class="forecast-table">${icons}</div>
+        <div class="forecast-table">${temps}</div>
+      `;
+    }
+
+    // 🌈 Biểu tượng thời tiết
+    function getWeatherIcon(type) {
+      switch (type) {
+        case "Clear": return "☀️";
+        case "Clouds": return "☁️";
+        case "Rain": return "🌧️";
+        case "Snow": return "❄️";
+        case "Thunderstorm": return "⛈️";
+        default: return "🌤️";
+      }
+    }
+
+    // 🧠 Viết hoa chữ cái đầu của mô tả
+    function capitalizeFirst(text) {
+      return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    // 💾 Lưu recent search
+    function saveRecentCity(city) {
+      let cities = JSON.parse(localStorage.getItem("recentCities")) || [];
+      cities = [city, ...cities.filter(c => c.toLowerCase() !== city.toLowerCase())];
+      if (cities.length > 5) cities.pop();
+      localStorage.setItem("recentCities", JSON.stringify(cities));
+    }
+
+    // 🔁 Hiển thị recent dạng "New York | Paris | Tokyo"
+    function renderRecentCities() {
+      const cities = JSON.parse(localStorage.getItem("recentCities")) || [];
+      if (cities.length > 0) {
+        document.getElementById("recent").innerHTML = `Recent: ${cities.join(" | ")}`;
+      } else {
+        document.getElementById("recent").innerHTML = "";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", renderRecentCities);
+  </script>
+</body>
+</html>
