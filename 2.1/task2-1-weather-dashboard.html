@@ -63,7 +63,7 @@
   <script>
     const API_KEY = "fe8b19ff2dd3ccf908b7a467067cb72a";
 
-    // 🌤️ Hàm chính tìm kiếm
+    // Hàm chính tìm kiếm
     async function searchWeather() {
       const city = document.getElementById("city").value.trim();
       if (!city) return;
@@ -86,21 +86,21 @@
       }
     }
 
-    // 🧭 Lấy dữ liệu thời tiết hiện tại
+    // Lấy dữ liệu thời tiết hiện tại
     async function fetchWeather(city) {
       const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`);
       if (!res.ok) throw new Error("City not found");
       return res.json();
     }
 
-    // 📅 Lấy dữ liệu dự báo 5 ngày
+    // Lấy dữ liệu dự báo 5 ngày
     async function fetchForecast(city) {
       const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=metric`);
       if (!res.ok) throw new Error("Forecast not available");
       return res.json();
     }
 
-    // 📄 Hiển thị thời tiết hiện tại
+    // Hiển thị thời tiết hiện tại
     function displayWeather(data) {
       const icon = getWeatherIcon(data.weather[0].main);
       const desc = capitalizeFirst(data.weather[0].description);
@@ -114,7 +114,7 @@
       `;
     }
 
-    // 📊 Hiển thị dự báo 5 ngày (dạng bảng)
+    // Hiển thị dự báo 5 ngày (dạng bảng)
     function displayForecast(data) {
       const list = data.list.filter(item => item.dt_txt.includes("12:00:00"));
       let days = "";
@@ -139,7 +139,7 @@
       `;
     }
 
-    // 🌈 Biểu tượng thời tiết
+    // Biểu tượng thời tiết
     function getWeatherIcon(type) {
       switch (type) {
         case "Clear": return "☀️";
@@ -151,12 +151,12 @@
       }
     }
 
-    // 🧠 Viết hoa chữ cái đầu của mô tả
+    // Viết hoa chữ cái đầu của mô tả
     function capitalizeFirst(text) {
       return text.charAt(0).toUpperCase() + text.slice(1);
     }
 
-    // 💾 Lưu recent search
+    // Lưu recent search
     function saveRecentCity(city) {
       let cities = JSON.parse(localStorage.getItem("recentCities")) || [];
       cities = [city, ...cities.filter(c => c.toLowerCase() !== city.toLowerCase())];
@@ -164,7 +164,7 @@
       localStorage.setItem("recentCities", JSON.stringify(cities));
     }
 
-    // 🔁 Hiển thị recent dạng "New York | Paris | Tokyo"
+    // Hiển thị recent dạng "New York | Paris | Tokyo"
     function renderRecentCities() {
       const cities = JSON.parse(localStorage.getItem("recentCities")) || [];
       if (cities.length > 0) {
@@ -178,3 +178,4 @@
   </script>
 </body>
 </html>
+
